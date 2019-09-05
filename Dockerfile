@@ -1,4 +1,4 @@
-FROM rocker/rstudio:latest
+FROM rocker/rstudio:3.6
 
 ## allow root access to terminal in RStudio
 ENV ROOT=TRUE
