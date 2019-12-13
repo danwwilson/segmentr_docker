@@ -32,6 +32,7 @@ RUN apt-get update \
     pkg-config \
     p7zip-full \
     libzmq3-dev \
+    libudunits2-dev \
   && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
   && rm -rf -- /var/lib/apt/lists /tmp/*.deb
 
