@@ -81,6 +81,7 @@ RUN install2.r --error \
   flexdashboard \
   XLConnect \
   RSQLite \
+  fst \
   && R -e 'remotes::install_gitlab("thedatacollective/segmentr")' \
   && R -e 'remotes::install_github("danwwilson/hrbrthemes", "dollar_axes")' \
   && R -e 'remotes::install_gitlab("thedatacollective/templatermd")' \
