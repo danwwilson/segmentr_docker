@@ -82,6 +82,8 @@ RUN install2.r --error \
   XLConnect \
   RSQLite \
   fst \
+  && R -e 'remotes::install_github("tidyverse/ggplot2")' \
+  && R -e 'remotes::install_github("wilkelab/gridtext")' \
   && R -e 'remotes::install_gitlab("thedatacollective/segmentr")' \
   && R -e 'remotes::install_github("danwwilson/hrbrthemes", "dollar_axes")' \
   && R -e 'remotes::install_github("thedatacollective/tdcthemes")' \
