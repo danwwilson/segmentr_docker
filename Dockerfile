@@ -84,6 +84,7 @@ RUN install2.r --error \
   fst \
   && R -e 'remotes::install_gitlab("thedatacollective/segmentr")' \
   && R -e 'remotes::install_github("danwwilson/hrbrthemes", "dollar_axes")' \
+  && R -e 'remotes::install_github("thedatacollective/tdcthemes")' \
   && R -e 'remotes::install_gitlab("thedatacollective/templatermd")' \
   && R -e 'remotes::install_github("StevenMMortimer/salesforcer")' \
   && R -e 'install.packages("data.table", type = "source", repos = "http://Rdatatable.github.io/data.table")' \
