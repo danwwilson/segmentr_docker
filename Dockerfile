@@ -6,8 +6,19 @@ ENV PASSWORD=password
 ENV DISABLE_AUTH=TRUE
 ENV TZ=Australia/Brisbane
 
-RUN apt-get update \
+ARG CTAN_REPO=${CTAN_REPO:-https://www.texlive.info/tlnet-archive/2019/02/27/tlnet}
+ENV CTAN_REPO=${CTAN_REPO}
+
+ENV PATH=$PATH:/opt/TinyTeX/bin/x86_64-linux/
+
+RUN wget "https://travis-bin.yihui.name/texlive-local.deb" \
+  && dpkg -i texlive-local.deb \
+  && rm texlive-local.deb \
+  && apt-get update \
   && apt-get install -y --no-install-recommends \
+    fonts-roboto \
+    ghostscript \
+    less \
     libgit2-dev \
     libxml2-dev \
     libcairo2-dev \
@@ -20,11 +31,16 @@ RUN apt-get update \
     libbz2-dev \
     libicu-dev \
     liblzma-dev \
+    libhunspell-dev \
+    libjpeg-dev \
     libv8-dev \
     openssh-client \
     mdbtools \
     libmagick++-dev \
     libsnappy-dev \
+    libopenmpi-dev \
+    librdf0-dev \
+    libtiff-dev \
     autoconf \
     automake \
     libtool \
@@ -32,9 +48,43 @@ RUN apt-get update \
     pkg-config \
     p7zip-full \
     libzmq3-dev \
+    qpdf \
+    ssh \
+    texinfo \
     libudunits2-dev \
   && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-  && rm -rf -- /var/lib/apt/lists /tmp/*.deb
+  && rm -rf -- /var/lib/apt/lists /tmp/*.deb \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/ \
+  ## Use tinytex for LaTeX installation
+  && install2.r --error tinytex \
+  ## Admin-based install of TinyTeX:
+  && wget -qO- \
+    "https://github.com/yihui/tinytex/raw/master/tools/install-unx.sh" | \
+    sh -s - --admin --no-path \
+  && mv ~/.TinyTeX /opt/TinyTeX \
+  && if /opt/TinyTeX/bin/*/tex -v | grep -q 'TeX Live 2018'; then \
+      ## Patch the Perl modules in the frozen TeX Live 2018 snapshot with the newer
+      ## version available for the installer in tlnet/tlpkg/TeXLive, to include the
+      ## fix described in https://github.com/yihui/tinytex/issues/77#issuecomment-466584510
+      ## as discussed in https://www.preining.info/blog/2019/09/tex-services-at-texlive-info/#comments
+      wget -P /tmp/ ${CTAN_REPO}/install-tl-unx.tar.gz \
+      && tar -xzf /tmp/install-tl-unx.tar.gz -C /tmp/ \
+      && cp -Tr /tmp/install-tl-*/tlpkg/TeXLive /opt/TinyTeX/tlpkg/TeXLive \
+      && rm -r /tmp/install-tl-*; \
+    fi \
+  && /opt/TinyTeX/bin/*/tlmgr path add \
+  && tlmgr install ae inconsolata listings metafont mfware parskip pdfcrop tex \
+  && tlmgr path add \
+  && Rscript -e "tinytex::r_texmf()" \
+  && chown -R root:staff /opt/TinyTeX \
+  && chmod -R g+w /opt/TinyTeX \
+  && chmod -R g+wx /opt/TinyTeX/bin \
+  && echo "PATH=${PATH}" >> /usr/local/lib/R/etc/Renviron \
+  && install2.r --error PKI \
+  ## And some nice R packages for publishing-related stuff
+  && install2.r --error --deps TRUE \
+    bookdown rticles rmdshower rJava
 
 RUN install2.r --error \
     --deps TRUE \
@@ -59,21 +109,6 @@ RUN install2.r --error \
   extrafont \
   writexl \
   feather
-
-## Install tinytex
-RUN install2.r --error tinytex \
-  ## Admin-based install of TinyTeX:
-  && wget -qO- \
-    "https://github.com/yihui/tinytex/raw/master/tools/install-unx.sh" | \
-    sh -s - --admin --no-path \
-  && mv ~/.TinyTeX /opt/TinyTeX \
-  && /opt/TinyTeX/bin/*/tlmgr path add \
-  && tlmgr install metafont mfware inconsolata tex ae parskip listings \
-  && tlmgr path add \
-  && Rscript -e "source('https://install-github.me/yihui/tinytex'); tinytex::r_texmf()" \
-  && chown -R root:staff /opt/TinyTeX \
-  && chmod -R a+w /opt/TinyTeX \
-  && chmod -R a+wx /opt/TinyTeX/bin
 
 ## execute R commands to install some packages
 RUN install2.r --error \
